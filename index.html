@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Zoey's Bakehouse — Custom Cake Order</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#F7F1E6;
+  --cream-deep:#F0E7D6;
+  --card:#FFFDF8;
+  --espresso:#3B2A24;
+  --espresso-soft:#6B5348;
+  --berry:#7A2234;
+  --berry-deep:#5C1826;
+  --rose:#CE93A4;
+  --rose-soft:#F2DEE2;
+  --gold:#B8935A;
+  --line:rgba(59,42,36,0.12);
+  --shadow: 0 8px 30px rgba(59,42,36,0.08);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background-color:var(--cream);
+  background-image:
+    radial-gradient(circle at 20% 10%, rgba(184,147,90,0.05), transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(122,34,52,0.04), transparent 45%),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/></svg>");
+  font-family:'Manrope',sans-serif;
+  color:var(--espresso);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,.serif{
+  font-family:'Cormorant Garamond', serif;
+  font-weight:600;
+  color:var(--espresso);
+  letter-spacing:0.01em;
+}
+.app{
+  max-width:520px;
+  margin:0 auto;
+  min-height:100vh;
+  position:relative;
+  padding-bottom:110px;
+}
+
+/* ---------- HEADER ---------- */
+.brand-header{
+  text-align:center;
+  padding:28px 24px 10px;
+}
+.brand-header .mark{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;
+  font-size:14px;
+  letter-spacing:0.22em;
+  text-transform:uppercase;
+  color:var(--berry);
+  display:block;
+  margin-bottom:2px;
+}
+.brand-header h1{
+  font-size:34px;
+  margin:0;
+  line-height:1.05;
+}
+.brand-header p{
+  margin:6px 0 0;
+  font-size:12.5px;
+  letter-spacing:0.14em;
+  text-transform:uppercase;
+  color:var(--espresso-soft);
+  font-weight:600;
+}
+
+/* ---------- TIERED CAKE STEP INDICATOR ---------- */
+.tier-progress{
+  position:sticky;
+  top:0;
+  z-index:30;
+  background:linear-gradient(var(--cream) 78%, rgba(247,241,230,0));
+  padding:14px 24px 18px;
+}
+.tier-stack{
+  display:flex;
+  flex-direction:column-reverse;
+  align-items:center;
+  gap:3px;
+  margin:0 auto 8px;
+}
+.tier-layer{
+  height:9px;
+  border-radius:5px;
+  background:var(--line);
+  transition:background .5s ease, box-shadow .5s ease, width .5s ease;
+  position:relative;
+  overflow:hidden;
+}
+.tier-layer[data-tier="0"]{width:56%;}
+.tier-layer[data-tier="1"]{width:68%;}
+.tier-layer[data-tier="2"]{width:80%;}
+.tier-layer[data-tier="3"]{width:92%;}
+.tier-layer[data-tier="4"]{width:100%;}
+.tier-layer[data-tier="5"]{width:100%; height:11px;}
+.tier-layer.done{
+  background:linear-gradient(90deg, var(--berry-deep), var(--berry));
+  box-shadow:0 2px 6px rgba(122,34,52,0.35);
+}
+.tier-layer.done::after{
+  content:"";
+  position:absolute; top:0; left:-30%;
+  width:20%; height:100%;
+  background:rgba(255,255,255,0.35);
+  filter:blur(3px);
+  animation:drip 2.6s ease-in-out infinite;
+}
+@keyframes drip{
+  0%,100%{left:-30%;}
+  50%{left:110%;}
+}
+.tier-meta{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  font-family:'Manrope',sans-serif;
+}
+.tier-meta .step-label{
+  font-size:11.5px;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:var(--espresso-soft);
+  font-weight:700;
+}
+.tier-meta .step-name{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;
+  font-size:17px;
+  color:var(--berry);
+}
+
+/* ---------- STEP PANELS ---------- */
+.step{
+  display:none;
+  padding:6px 24px 20px;
+  animation:fadeUp .35s ease;
+}
+.step.active{display:block;}
+@keyframes fadeUp{
+  from{opacity:0; transform:translateY(8px);}
+  to{opacity:1; transform:translateY(0);}
+}
+.step-heading{
+  margin:6px 0 4px;
+  font-size:24px;
+}
+.step-sub{
+  margin:0 0 20px;
+  font-size:13.5px;
+  color:var(--espresso-soft);
+  line-height:1.5;
+}
+
+/* ---------- FORM ELEMENTS ---------- */
+.field{margin-bottom:18px;}
+.field label{
+  display:block;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  color:var(--espresso-soft);
+  margin-bottom:7px;
+}
+.field input[type="text"],
+.field input[type="date"],
+.field input[type="tel"],
+.field select,
+.field textarea{
+  width:100%;
+  border:1px solid var(--line);
+  background:var(--card);
+  border-radius:12px;
+  padding:13px 14px;
+  font-family:'Manrope',sans-serif;
+  font-size:15px;
+  color:var(--espresso);
+  outline:none;
+  transition:border-color .2s, box-shadow .2s;
+  -webkit-appearance:none;
+  appearance:none;
+}
+.field textarea{resize:vertical; min-height:80px; line-height:1.5;}
+.field input:focus, .field select:focus, .field textarea:focus{
+  border-color:var(--berry);
+  box-shadow:0 0 0 3px rgba(122,34,52,0.1);
+}
+.field .hint{
+  font-size:11.5px;
+  color:var(--espresso-soft);
+  margin-top:6px;
+  line-height:1.4;
+}
+.select-wrap{position:relative;}
+.select-wrap::after{
+  content:"⌄";
+  position:absolute;
+  right:14px; top:50%;
+  transform:translateY(-58%);
+  color:var(--berry);
+  font-size:16px;
+  pointer-events:none;
+}
+.phone-row{display:flex; gap:8px;}
+.phone-row .flag-select{flex:0 0 108px;}
+.phone-row .flag-select select{padding-left:10px;}
+.phone-row .num-input{flex:1;}
+
+/* ---------- STEP 2: TIER CARDS ---------- */
+.tier-cards{display:flex; flex-direction:column; gap:12px;}
+.tier-card{
+  background:var(--card);
+  border:1.5px solid var(--line);
+  border-radius:16px;
+  padding:16px 16px 16px 14px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  cursor:pointer;
+  transition:border-color .2s, box-shadow .2s, transform .15s;
+}
+.tier-card:active{transform:scale(0.99);}
+.tier-card.selected{
+  border-color:var(--berry);
+  box-shadow:var(--shadow);
+  background:linear-gradient(180deg, #fff, var(--rose-soft) 220%);
+}
+.tier-icon{
+  flex:0 0 56px;
+  height:56px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+}
+.tier-card .tc-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:19px;
+  font-weight:600;
+  margin:0 0 2px;
+}
+.tier-card .tc-meta{
+  font-size:12.5px;
+  color:var(--espresso-soft);
+  line-height:1.45;
+}
+.tier-card .tc-radio{
+  flex:0 0 20px;
+  width:20px;height:20px;
+  border-radius:50%;
+  border:1.5px solid var(--line);
+  position:relative;
+}
+.tier-card.selected .tc-radio{border-color:var(--berry);}
+.tier-card.selected .tc-radio::after{
+  content:"";
+  position:absolute; inset:3px;
+  border-radius:50%;
+  background:var(--berry);
+}
+
+/* ---------- STEP 3: ACCORDIONS ---------- */
+.flavor-block{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:16px;
+  margin-bottom:14px;
+}
+.flavor-block .fb-title{
+  display:flex; align-items:center; gap:8px;
+  font-family:'Cormorant Garamond',serif;
+  font-size:18px;
+  font-style:italic;
+  color:var(--berry);
+  margin:0 0 10px;
+}
+.fb-title .layer-dot{
+  width:8px; height:8px; border-radius:50%;
+  background:var(--gold); flex:none;
+}
+
+/* ---------- STEP 4: UPLOAD ---------- */
+.dropzone{
+  border:1.5px dashed var(--espresso-soft);
+  border-radius:16px;
+  padding:36px 20px;
+  text-align:center;
+  background:rgba(255,255,255,0.4);
+  cursor:pointer;
+  transition:border-color .2s, background .2s;
+}
+.dropzone.drag-over{
+  border-color:var(--berry);
+  background:var(--rose-soft);
+}
+.dropzone .dz-icon{font-size:26px; margin-bottom:8px; display:block;}
+.dropzone .dz-text{font-size:14px; color:var(--espresso-soft); margin:0;}
+.dropzone .dz-text b{color:var(--berry); font-weight:700;}
+.dropzone input{display:none;}
+.thumb-row{
+  display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;
+}
+.thumb{
+  width:64px; height:64px; border-radius:10px;
+  background-size:cover; background-position:center;
+  border:1px solid var(--line);
+  position:relative;
+}
+.char-count{
+  text-align:right;
+  font-size:11.5px;
+  color:var(--espresso-soft);
+  margin-top:6px;
+}
+.char-count.warn{color:var(--berry);}
+
+/* ---------- STEP 5: MARKETPLACE ---------- */
+.addon-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:14px;
+}
+.addon-card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  overflow:hidden;
+}
+.addon-image{
+  height:96px;
+  background:
+    linear-gradient(135deg, var(--rose-soft), var(--cream-deep));
+  display:flex; align-items:center; justify-content:center;
+  font-size:30px;
+  position:relative;
+}
+.addon-image .min-badge{
+  position:absolute; top:8px; right:8px;
+  background:var(--berry);
+  color:#fff;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.05em;
+  padding:3px 8px;
+  border-radius:20px;
+  text-transform:uppercase;
+}
+.addon-body{padding:12px 14px 14px;}
+.addon-body .ac-name{
+  font-family:'Cormorant Garamond',serif;
+  font-size:18px;
+  font-weight:600;
+  margin:0 0 8px;
+}
+.addon-controls{
+  display:flex; flex-direction:column; gap:10px;
+}
+.addon-controls .select-wrap{flex:none; width:100%;}
+.addon-controls select{padding:9px 26px 9px 10px; font-size:13.5px; width:100%;}
+.stepper{
+  display:flex; align-items:center;
+  border:1px solid var(--line);
+  border-radius:10px;
+  overflow:hidden;
+  width:100%;
+}
+.stepper button{
+  flex:0 0 40px; height:38px;
+  border:none; background:var(--cream-deep);
+  color:var(--berry);
+  font-size:18px; font-weight:700;
+  cursor:pointer;
+}
+.stepper button:disabled{opacity:0.35; cursor:not-allowed;}
+.stepper .qty{
+  flex:1; text-align:center;
+  font-size:14.5px; font-weight:700;
+  background:var(--card);
+  height:38px;
+  display:flex; align-items:center; justify-content:center;
+}
+.addon-footnote{
+  font-size:10.5px; color:var(--espresso-soft); margin-top:8px;
+}
+.min-warning{
+  font-size:11px; color:var(--berry); font-weight:700;
+  margin:8px 0 0; display:none;
+}
+.min-warning.show{display:block;}
+
+/* ---------- STEP 6: FULFILLMENT ---------- */
+.toggle-switch{
+  display:flex;
+  background:var(--cream-deep);
+  border-radius:14px;
+  padding:4px;
+  margin-bottom:18px;
+}
+.toggle-switch button{
+  flex:1;
+  border:none;
+  background:transparent;
+  padding:11px 0;
+  font-family:'Manrope',sans-serif;
+  font-size:13.5px;
+  font-weight:700;
+  color:var(--espresso-soft);
+  border-radius:11px;
+  cursor:pointer;
+  transition:all .2s;
+}
+.toggle-switch button.active{
+  background:var(--berry);
+  color:#fff;
+  box-shadow:0 4px 12px rgba(122,34,52,0.28);
+}
+.fulfillment-panel{display:none;}
+.fulfillment-panel.active{display:block;}
+.tier-terms{
+  background:var(--rose-soft);
+  border-radius:12px;
+  padding:12px 14px;
+  font-size:12px;
+  color:var(--espresso);
+  line-height:1.55;
+  margin-top:10px;
+}
+.tier-terms b{color:var(--berry);}
+
+/* ---------- SUMMARY ---------- */
+.summary-card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:18px;
+  margin-top:22px;
+}
+.summary-card h3{
+  font-size:19px;
+  margin:0 0 12px;
+  display:flex; align-items:center; gap:8px;
+}
+.summary-card h3::before{
+  content:"";
+  width:5px; height:16px;
+  background:var(--gold);
+  border-radius:3px;
+  display:inline-block;
+}
+.summary-row{
+  display:flex; justify-content:space-between; gap:14px;
+  padding:9px 0;
+  border-bottom:1px dashed var(--line);
+  font-size:13.5px;
+}
+.summary-row:last-of-type{border-bottom:none;}
+.summary-row .label{color:var(--espresso-soft); flex:0 0 40%;}
+.summary-row .value{text-align:right; font-weight:600; flex:1;}
+.summary-total{
+  display:flex; justify-content:space-between;
+  align-items:baseline;
+  margin-top:14px;
+  padding-top:14px;
+  border-top:1.5px solid var(--line);
+}
+.summary-total .t-label{
+  font-family:'Cormorant Garamond',serif;
+  font-size:18px;
+  font-style:italic;
+}
+.summary-total .t-value{
+  font-family:'Cormorant Garamond',serif;
+  font-size:28px;
+  font-weight:600;
+  color:var(--berry);
+}
+.price-note{font-size:10.5px; color:var(--espresso-soft); margin-top:6px;}
+
+/* ---------- NAV / CTA ---------- */
+.nav-bar{
+  position:fixed;
+  bottom:0; left:50%; transform:translateX(-50%);
+  width:100%; max-width:520px;
+  background:linear-gradient(0deg, var(--cream) 60%, rgba(247,241,230,0));
+  padding:18px 24px 22px;
+  display:flex; gap:10px;
+  z-index:40;
+}
+.btn{
+  flex:1;
+  border:none;
+  border-radius:14px;
+  padding:15px 0;
+  font-family:'Manrope',sans-serif;
+  font-weight:700;
+  font-size:14.5px;
+  letter-spacing:0.02em;
+  cursor:pointer;
+  transition:transform .12s, box-shadow .2s;
+}
+.btn:active{transform:scale(0.97);}
+.btn-back{
+  flex:0 0 92px;
+  background:transparent;
+  border:1.5px solid var(--line);
+  color:var(--espresso-soft);
+}
+.btn-next{
+  background:var(--berry);
+  color:#fff;
+  box-shadow:0 8px 20px rgba(122,34,52,0.3);
+}
+.btn-whatsapp{
+  background:#1F7A5C;
+  color:#fff;
+  display:flex; align-items:center; justify-content:center; gap:9px;
+  box-shadow:0 8px 22px rgba(31,122,92,0.32);
+}
+.btn-whatsapp svg{width:19px; height:19px;}
+
+/* utility */
+.req-note{color:var(--berry); font-size:11px; margin-top:-10px; margin-bottom:14px; display:none;}
+.req-note.show{display:block;}
+
+@media (min-width:640px){
+  .addon-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="brand-header">
+    <span class="mark">Bespoke Patisserie</span>
+    <h1>Zoey's Bakehouse</h1>
+    <p>Custom Cake Atelier</p>
+  </div>
+
+  <div class="tier-progress">
+    <div class="tier-stack" id="tierStack">
+      <div class="tier-layer" data-tier="0"></div>
+      <div class="tier-layer" data-tier="1"></div>
+      <div class="tier-layer" data-tier="2"></div>
+      <div class="tier-layer" data-tier="3"></div>
+      <div class="tier-layer" data-tier="4"></div>
+      <div class="tier-layer" data-tier="5"></div>
+    </div>
+    <div class="tier-meta">
+      <span class="step-label" id="stepLabel">Step 1 of 6</span>
+      <span class="step-name serif" id="stepName">Logistics &amp; Occasion</span>
+    </div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="step active" data-step="1">
+    <h2 class="step-heading serif">Tell us the occasion</h2>
+    <p class="step-sub">A few details so we can start planning your cake around the right day and the right celebration.</p>
+
+    <div class="field">
+      <label for="custName">Customer Name</label>
+      <input type="text" id="custName" placeholder="Your full name">
+    </div>
+
+    <div class="field">
+      <label for="orderDate">Date of Order (Pickup / Delivery)</label>
+      <input type="date" id="orderDate">
+    </div>
+
+    <div class="field">
+      <label for="waNumber">WhatsApp Number</label>
+      <div class="phone-row">
+        <div class="flag-select select-wrap">
+          <select id="waFlag">
+            <option value="+91" selected>🇮🇳 +91</option>
+            <option value="+60">🇲🇾 +60</option>
+            <option value="+65">🇸🇬 +65</option>
+            <option value="+971">🇦🇪 +971</option>
+            <option value="+44">🇬🇧 +44</option>
+            <option value="+1">🇺🇸 +1</option>
+            <option value="+61">🇦🇺 +61</option>
+          </select>
+        </div>
+        <div class="num-input">
+          <input type="tel" id="waNum" placeholder="98765 43210">
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="occasion">Occasion</label>
+      <input type="text" id="occasion" placeholder="Birthday, Wedding, Anniversary...">
+    </div>
+
+    <div class="field">
+      <label for="dietary">Dietary Restrictions &amp; Allergies</label>
+      <textarea id="dietary" placeholder="e.g. Eggless options, nut allergy, gluten-free request"></textarea>
+      <div class="hint">Let us know so every tier is safe for your guests to enjoy.</div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step" data-step="2">
+    <h2 class="step-heading serif">Choose your size</h2>
+    <p class="step-sub">Pick the tier count that matches your guest list — we'll guide the flavors and pricing from here.</p>
+
+    <div class="tier-cards" id="tierCards">
+      <div class="tier-card" data-tiers="1">
+        <div class="tier-icon">
+          <svg width="48" height="48" viewBox="0 0 48 48"><rect x="10" y="30" width="28" height="12" rx="2" fill="#C98BA0"/><rect x="10" y="27" width="28" height="4" fill="#7A2234"/><circle cx="24" cy="24" r="2" fill="#B8935A"/></svg>
+        </div>
+        <div style="flex:1;">
+          <p class="tc-title">Single Tier</p>
+          <p class="tc-meta">Serves 8–12 guests · 1–2 kgs of cake</p>
+        </div>
+        <div class="tc-radio"></div>
+      </div>
+
+      <div class="tier-card" data-tiers="2">
+        <div class="tier-icon">
+          <svg width="48" height="48" viewBox="0 0 48 48"><rect x="12" y="30" width="24" height="10" rx="2" fill="#C98BA0"/><rect x="12" y="27" width="24" height="4" fill="#7A2234"/><rect x="16" y="17" width="16" height="10" rx="2" fill="#E4C2CC"/><rect x="16" y="14" width="16" height="4" fill="#7A2234"/><circle cx="24" cy="11" r="2" fill="#B8935A"/></svg>
+        </div>
+        <div style="flex:1;">
+          <p class="tc-title">Two Tier</p>
+          <p class="tc-meta">Serves 20–30 guests · 3–5 kgs of cake</p>
+        </div>
+        <div class="tc-radio"></div>
+      </div>
+
+      <div class="tier-card" data-tiers="3">
+        <div class="tier-icon">
+          <svg width="48" height="48" viewBox="0 0 48 48"><rect x="10" y="34" width="28" height="8" rx="2" fill="#C98BA0"/><rect x="10" y="31" width="28" height="4" fill="#7A2234"/><rect x="14" y="22" width="20" height="8" rx="2" fill="#E4C2CC"/><rect x="14" y="19" width="20" height="4" fill="#7A2234"/><rect x="18" y="11" width="12" height="7" rx="2" fill="#F2DEE2"/><rect x="18" y="8" width="12" height="4" fill="#7A2234"/><circle cx="24" cy="6" r="2" fill="#B8935A"/></svg>
+        </div>
+        <div style="flex:1;">
+          <p class="tc-title">Three Tier</p>
+          <p class="tc-meta">Serves 50–70 guests · 6–8 kgs of cake</p>
+        </div>
+        <div class="tc-radio"></div>
+      </div>
+    </div>
+    <div class="hint" style="margin-top:14px;">Rough guide: 1 kg of cake serves 8–10 guests as a single dessert slice. Your baker will confirm exact portions at consultation.</div>
+
+    <div class="field" id="weightField" style="margin-top:18px; display:none;">
+      <label for="cakeWeight">Exact Cake Weight</label>
+      <div class="select-wrap">
+        <select id="cakeWeight"></select>
+      </div>
+      <div class="hint">Choose the specific weight within your tier's range — this helps us confirm servings and final pricing with you.</div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step" data-step="3">
+    <h2 class="step-heading serif">Flavor &amp; message</h2>
+    <p class="step-sub">Choose a flavor for every layer, then tell us what the cake should say.</p>
+
+    <div id="flavorLayers"></div>
+
+    <div class="field">
+      <label for="frosting">Frosting Type</label>
+      <div class="select-wrap">
+        <select id="frosting">
+          <option value="">Select frosting</option>
+          <option>Buttercream</option>
+          <option>Fondant</option>
+          <option>Whipped Cream</option>
+          <option>Ganache Drip</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="cakeMessage">Name or Message on the Cake</label>
+      <input type="text" id="cakeMessage" placeholder="e.g. Happy Birthday Zoey">
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="step" data-step="4">
+    <h2 class="step-heading serif">Share your vision</h2>
+    <p class="step-sub">Upload inspiration photos or sketches, and describe the design in your own words.</p>
+
+    <div class="field">
+      <label>Inspiration Images / Sketches</label>
+      <div class="dropzone" id="dropzone">
+        <span class="dz-icon">🎂</span>
+        <p class="dz-text"><b>Tap to upload</b> or drag & drop images here</p>
+        <input type="file" id="fileInput" accept="image/*" multiple>
+      </div>
+      <div class="thumb-row" id="thumbRow"></div>
+    </div>
+
+    <div class="field">
+      <label for="designNotes">Custom Cake Design Notes</label>
+      <textarea id="designNotes" maxlength="500" placeholder="Colors, textures, toppers, floral style, anything you'd like our cake artists to know..."></textarea>
+      <div class="char-count" id="charCount">0/500</div>
+    </div>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="step" data-step="5">
+    <h2 class="step-heading serif">Luxury add-ons</h2>
+    <p class="step-sub">Round out your dessert table — set a flavor and quantity for anything you'd like to add.</p>
+
+    <div class="addon-grid" id="addonGrid"></div>
+  </div>
+
+  <!-- STEP 6 -->
+  <div class="step" data-step="6">
+    <h2 class="step-heading serif">Fulfillment &amp; review</h2>
+    <p class="step-sub">Choose how your order reaches you, then confirm every detail below.</p>
+
+    <div class="field">
+      <label for="venueLocation">Venue / Event Location</label>
+      <input type="text" id="venueLocation" placeholder="e.g. Grand Ballroom, ABC Convention Centre">
+      <div class="hint">Optional — helpful if the cake is being received at an event hall, resort or venue rather than a home address.</div>
+    </div>
+
+    <div class="toggle-switch" id="fulfillToggle">
+      <button class="active" data-mode="pickup">Store Pickup</button>
+      <button data-mode="delivery">Delivery</button>
+    </div>
+
+    <div class="fulfillment-panel active" data-panel="pickup">
+      <div class="field">
+        <label for="pickupSlot">Pickup Slot</label>
+        <div class="select-wrap">
+          <select id="pickupSlot"></select>
+        </div>
+        <div class="hint">Available daily, 10:00 AM – 5:30 PM. Please collect within 30 minutes of your slot.</div>
+      </div>
+    </div>
+
+    <div class="fulfillment-panel" data-panel="delivery">
+      <div class="field">
+        <label for="deliveryAddress">Delivery Address</label>
+        <textarea id="deliveryAddress" placeholder="Full address including landmark and pin code"></textarea>
+        <div class="tier-terms">
+          <b>Delivery tiers:</b> 0–5 km flat fee · 5–15 km distance-based fee · 15 km+ subject to confirmation.
+          All cakes are hand-delivered in climate-controlled transport; exact fee is confirmed on WhatsApp before final payment.
+        </div>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <h3 class="serif">Order Summary</h3>
+      <div id="summaryBody"></div>
+      <div class="upload-warning" style="background-color: var(--rose-soft); border-left: 4px solid var(--berry); padding: 10px 12px; border-radius: 8px; font-size: 12px; line-height: 1.45; color: var(--espresso); margin: 12px 0 16px;">
+        ⚠️ <b>Note:</b> Due to WhatsApp privacy rules, your uploaded inspiration images cannot transfer automatically. Please remember to manually attach your reference photos directly in the chat thread once WhatsApp opens.
+      </div>
+      <div class="summary-total">
+        <span class="t-label">Estimated Total</span>
+        <span class="t-value" id="summaryTotal">₹180</span>
+      </div>
+      <div class="price-note">Base price starts at ₹180 for a Single Tier cake. Final pricing depends on design complexity, add-ons and delivery — confirmed by our team on WhatsApp. Add-on unit prices shown are illustrative starting rates.</div>
+    </div>
+  </div>
+
+  <div class="nav-bar">
+    <button class="btn btn-back" id="btnBack">Back</button>
+    <button class="btn btn-next" id="btnNext">Continue</button>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  // --- Global Configuration ---
+  const CONFIG = {
+    businessNumber: '918978555664', // Zoey's Bakehouse WhatsApp — digits only, country code included, no + or spaces
+    basePrices: { "1": 180, "2": 420, "3": 760 }
+  };
+
+  const totalSteps = 6;
+  let current = 1;
+
+  const stepNames = {
+    1:"Logistics & Occasion",
+    2:"Choose Size & Tiers",
+    3:"Flavor & Message",
+    4:"Share Your Vision",
+    5:"Luxury Add-Ons",
+    6:"Fulfillment & Review"
+  };
+
+  const flavorOptions = ["Chocolate Truffle","Hazelnut Praline","Biscoff Caramel","Red Velvet","Vanilla Bean","Lemon Elderflower","Salted Caramel"];
+
+  let selectedTier = null; // '1' | '2' | '3'
+  const layerFlavors = {}; // {1: value, 2: value, 3: value}
+
+  // ---------- ADD-ONS DATA (sourced from Zoey's Bakehouse printed menu) ----------
+  const addons = [
+    {id:"cupcakes", name:"Cupcakes", min:10, icon:"🧁",
+      note:"Contains eggs unless requested eggless.",
+      styles:[
+        {label:"Basic (No Theme)", price:100},
+        {label:"Custom Topper (Inedible)", price:125},
+        {label:"Custom Edible Print", price:125},
+        {label:"Customized Handcrafted", price:150}
+      ],
+      flavors:["Chocolate","Vanilla","Red Velvet","Assorted Center Filled"]},
+
+    {id:"cakepops", name:"Cakepops", min:10, icon:"🍭",
+      note:"Eggless.",
+      styles:[
+        {label:"Colorful Basic", price:100},
+        {label:"Customized Circular", price:125},
+        {label:"Customized Shaped", price:150}
+      ],
+      flavors:["Chocolate","Vanilla","Red Velvet"]},
+
+    {id:"cakesicles", name:"Cakesicles", min:10, icon:"🍦",
+      note:"Eggless.",
+      styles:[
+        {label:"Basic", price:130},
+        {label:"Customized", price:165}
+      ],
+      flavors:["Chocolate","Vanilla","Red Velvet"]},
+
+    {id:"oreos", name:"Custom Theme Oreos", min:10, icon:"🍪",
+      note:"Chocolate coated, fully customized.",
+      styles:[
+        {label:"Chocolate Coated, Customized", price:125}
+      ],
+      flavors:["Chocolate Coated"]},
+
+    {id:"macarons", name:"Macarons & Macaron Towers", min:10, icon:"🌸",
+      note:"Fruit-based flavors subject to availability. Made with Mamra almonds and real fruit — no artificial flavoring. Contains eggs.",
+      styles:[
+        {label:"Basic (No Theme)", price:100},
+        {label:"Custom Macarons", price:125},
+        {label:"Shaped Macarons (complexity-based)", price:null},
+        {label:"Macaron Tower — Small", price:2500},
+        {label:"Macaron Tower — Medium", price:3500},
+        {label:"Macaron Tower — Large", price:4500}
+      ],
+      flavors:["Chocolate","Fudge","Coconut","Raspberry","Mango","Passionfruit"]},
+
+    {id:"cookies", name:"Custom Sugar Cookies", min:10, icon:"🍪",
+      note:"Sugar butter cookies contain eggs. Flavor confirmed at order.",
+      styles:[
+        {label:"Custom Cookies", price:150}
+      ],
+      flavors:["Flavor confirmed at order"]},
+
+    {id:"donuts", name:"Baked Donuts", min:10, icon:"🍩",
+      note:"Oven-baked, not fried — no yeast. Flavor confirmed at order.",
+      styles:[
+        {label:"Custom Donuts", price:125}
+      ],
+      flavors:["Flavor confirmed at order"]}
+  ];
+  const addonState = {}; // id -> {qty, styleIndex, flavor}
+  addons.forEach(a => addonState[a.id] = {qty:0, styleIndex:0, flavor:a.flavors[0]});
+
+  // ---------- STEP INDICATOR ----------
+  function renderProgress(){
+    document.getElementById('stepLabel').textContent = `Step ${current} of ${totalSteps}`;
+    document.getElementById('stepName').textContent = stepNames[current];
+    document.querySelectorAll('.tier-layer').forEach(layer=>{
+      const t = parseInt(layer.dataset.tier,10);
+      layer.classList.toggle('done', t < current);
+    });
+  }
+
+  function showStep(n){
+    document.querySelectorAll('.step').forEach(s=>{
+      s.classList.toggle('active', parseInt(s.dataset.step,10)===n);
+    });
+    document.getElementById('btnBack').style.visibility = n===1 ? 'hidden' : 'visible';
+    const nextBtn = document.getElementById('btnNext');
+    if(n===totalSteps){
+      nextBtn.className = 'btn btn-whatsapp';
+      nextBtn.innerHTML = whatsAppIcon() + ' Send Order Details via WhatsApp';
+    } else {
+      nextBtn.className = 'btn btn-next';
+      nextBtn.textContent = 'Continue';
+    }
+    renderProgress();
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+  function whatsAppIcon(){
+    return `<svg viewBox="0 0 32 32" fill="currentColor"><path d="M16 3C9 3 3.3 8.6 3.3 15.6c0 2.4.6 4.6 1.8 6.6L3 29l7-1.8c1.9 1 4 1.6 6 1.6 7 0 12.7-5.6 12.7-12.6C28.7 8.6 23 3 16 3zm0 23c-1.9 0-3.7-.5-5.3-1.4l-.4-.2-4.2 1.1 1.1-4-.2-.4A10.5 10.5 0 0 1 5.6 15.6C5.6 9.9 10.3 5.3 16 5.3S26.4 9.9 26.4 15.6 21.7 26 16 26zm5.8-7.8c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.2-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.2-1.3-.5-2.5-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6.1-.1.3-.3.5-.5.1-.2.2-.3.3-.5.1-.2 0-.4 0-.6 0-.2-.7-1.8-1-2.4-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.2 3.4 5.3 4.7.7.3 1.3.5 1.8.7.7.2 1.4.2 1.9.1.6-.1 1.9-.8 2.1-1.5.3-.7.3-1.3.2-1.5-.1-.1-.3-.2-.6-.4z"/></svg>`;
+  }
+
+  // ---------- STEP 2: TIER CARDS ----------
+  let selectedWeight = null;
+
+  function renderWeightOptions(){
+    const field = document.getElementById('weightField');
+    const select = document.getElementById('cakeWeight');
+    if(!selectedTier){ field.style.display='none'; return; }
+    field.style.display='block';
+    const opts = [1,2,3,4,5,6,7,8,9,10];
+    select.innerHTML = opts.map(w=>`<option value="${w}">${w} kg</option>`).join('');
+    selectedWeight = opts[0];
+  }
+  document.getElementById('cakeWeight') && document.getElementById('cakeWeight').addEventListener('change', e=>{
+    selectedWeight = parseFloat(e.target.value);
+  });
+
+  document.querySelectorAll('.tier-card').forEach(card=>{
+    card.addEventListener('click', ()=>{
+      document.querySelectorAll('.tier-card').forEach(c=>c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedTier = card.dataset.tiers;
+      renderFlavorLayers();
+      renderWeightOptions();
+    });
+  });
+
+  // ---------- STEP 3: FLAVOR LAYERS ----------
+  function renderFlavorLayers(){
+    const wrap = document.getElementById('flavorLayers');
+    wrap.innerHTML = '';
+    const count = selectedTier ? parseInt(selectedTier,10) : 1;
+    const labels = count===1 ? ['Cake Flavor'] :
+                   count===2 ? ['Layer 1 (Base Flavor)','Layer 2 (Top Flavor)'] :
+                   ['Layer 1 (Base Flavor)','Layer 2 (Middle Flavor)','Layer 3 (Top Flavor)'];
+    labels.forEach((label, i)=>{
+      const block = document.createElement('div');
+      block.className = 'flavor-block';
+      const opts = flavorOptions.map(f=>`<option value="${f}" ${layerFlavors[i]===f?'selected':''}>${f}</option>`).join('');
+      block.innerHTML = `
+        <p class="fb-title"><span class="layer-dot"></span>${label}</p>
+        <div class="select-wrap">
+          <select data-layer="${i}">
+            <option value="">Select flavor</option>
+            ${opts}
+          </select>
+        </div>`;
+      wrap.appendChild(block);
+    });
+    wrap.querySelectorAll('select').forEach(sel=>{
+      sel.addEventListener('change', e=>{
+        layerFlavors[e.target.dataset.layer] = e.target.value;
+      });
+    });
+  }
+  renderFlavorLayers();
+
+  // ---------- STEP 4: UPLOAD ----------
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const thumbRow = document.getElementById('thumbRow');
+  let uploadedFiles = [];
+
+  dropzone.addEventListener('click', ()=> fileInput.click());
+  fileInput.addEventListener('change', e=> handleFiles(e.target.files));
+  ['dragover','dragenter'].forEach(evt=>{
+    dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.add('drag-over'); });
+  });
+  ['dragleave','drop'].forEach(evt=>{
+    dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.remove('drag-over'); });
+  });
+  dropzone.addEventListener('drop', e=>{
+    handleFiles(e.dataTransfer.files);
+  });
+  function handleFiles(files){
+    Array.from(files).forEach(file=>{
+      if(!file.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = ev=>{
+        uploadedFiles.push({name:file.name, url:ev.target.result});
+        renderThumbs();
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  function renderThumbs(){
+    thumbRow.innerHTML = uploadedFiles.map(f=>`<div class="thumb" style="background-image:url('${f.url}')" title="${f.name}"></div>`).join('');
+  }
+
+  const designNotes = document.getElementById('designNotes');
+  const charCount = document.getElementById('charCount');
+  designNotes.addEventListener('input', ()=>{
+    const len = designNotes.value.length;
+    charCount.textContent = `${len}/500`;
+    charCount.classList.toggle('warn', len>450);
+  });
+
+  // ---------- STEP 5: ADD-ON MARKETPLACE ----------
+  function fmtPrice(p){ return p===null ? 'Quote on request' : `₹${p}`; }
+
+  function renderAddons(){
+    const grid = document.getElementById('addonGrid');
+    grid.innerHTML = addons.map(a=>{
+      const styleOpts = a.styles.map((s,i)=>`<option value="${i}">${s.label} — ${fmtPrice(s.price)}</option>`).join('');
+      const flavorOpts = a.flavors.map(f=>`<option value="${f}">${f}</option>`).join('');
+      return `
+      <div class="addon-card" data-id="${a.id}">
+        <div class="addon-image">${a.icon}<span class="min-badge">Min ${a.min}</span></div>
+        <div class="addon-body">
+          <p class="ac-name">${a.name}</p>
+          <div class="select-wrap" style="margin-bottom:8px;">
+            <select class="addon-style" data-id="${a.id}">${styleOpts}</select>
+          </div>
+          <div class="addon-controls">
+            <div class="select-wrap">
+              <select class="addon-flavor" data-id="${a.id}">${flavorOpts}</select>
+            </div>
+            <div class="stepper">
+              <button class="dec" data-id="${a.id}">−</button>
+              <span class="qty" data-id="${a.id}">0</span>
+              <button class="inc" data-id="${a.id}">+</button>
+            </div>
+          </div>
+          <p class="min-warning" data-warn="${a.id}"></p>
+          <p class="addon-footnote">${a.note}</p>
+        </div>
+      </div>`;
+    }).join('');
+
+    grid.querySelectorAll('.addon-style').forEach(sel=>{
+      sel.addEventListener('change', e=>{
+        addonState[e.target.dataset.id].styleIndex = parseInt(e.target.value,10);
+      });
+    });
+    grid.querySelectorAll('.addon-flavor').forEach(sel=>{
+      sel.addEventListener('change', e=>{
+        addonState[e.target.dataset.id].flavor = e.target.value;
+      });
+    });
+    grid.querySelectorAll('.inc').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const a = addons.find(x=>x.id===btn.dataset.id);
+        const st = addonState[a.id];
+        st.qty = st.qty+1;
+        updateQtyDisplay(a.id);
+      });
+    });
+    grid.querySelectorAll('.dec').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const a = addons.find(x=>x.id===btn.dataset.id);
+        const st = addonState[a.id];
+        st.qty = Math.max(0, st.qty-1);
+        updateQtyDisplay(a.id);
+      });
+    });
+  }
+  function updateQtyDisplay(id){
+    const a = addons.find(x=>x.id===id);
+    const st = addonState[id];
+    const qtyEl = document.querySelector(`.qty[data-id="${id}"]`);
+    if(qtyEl) qtyEl.textContent = st.qty;
+    const warnEl = document.querySelector(`.min-warning[data-warn="${id}"]`);
+    if(warnEl){
+      if(st.qty>0 && st.qty<a.min){
+        warnEl.textContent = `Minimum order: ${a.min} — add ${a.min-st.qty} more`;
+        warnEl.classList.add('show');
+      } else {
+        warnEl.classList.remove('show');
+      }
+    }
+  }
+  renderAddons();
+
+  // ---------- STEP 6: FULFILLMENT ----------
+  const fulfillToggle = document.getElementById('fulfillToggle');
+  let fulfillMode = 'pickup';
+  fulfillToggle.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      fulfillToggle.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      fulfillMode = btn.dataset.mode;
+      document.querySelectorAll('.fulfillment-panel').forEach(p=>{
+        p.classList.toggle('active', p.dataset.panel===fulfillMode);
+      });
+      renderSummary();
+    });
+  });
+
+  // populate pickup slots 10:00 AM - 5:30 PM every 60 min (with a 5:30 finish)
+  const pickupSlot = document.getElementById('pickupSlot');
+  (function buildSlots(){
+    const slots = ["10:00 AM","11:00 AM","12:00 PM","1:00 PM","2:00 PM","3:00 PM","4:00 PM","5:00 PM","5:30 PM"];
+    pickupSlot.innerHTML = slots.map(s=>`<option>${s}</option>`).join('');
+  })();
+  pickupSlot.addEventListener('change', renderSummary);
+  document.getElementById('deliveryAddress').addEventListener('input', renderSummary);
+  document.getElementById('venueLocation').addEventListener('input', renderSummary);
+
+  // ---------- SUMMARY ----------
+  const tierMeta = {
+    "1":{name:"Single Tier", serves:"8–12 guests", weight:"1–2 kgs"},
+    "2":{name:"Two Tier", serves:"20–30 guests", weight:"3–5 kgs"},
+    "3":{name:"Three Tier", serves:"50–70 guests", weight:"6–8 kgs"}
+  };
+  // basePrices moved to CONFIG block
+
+  function currentFlavorLines(){
+    const count = selectedTier ? parseInt(selectedTier,10) : 1;
+    const labels = count===1 ? ['Flavor'] : count===2 ? ['Layer 1','Layer 2'] : ['Layer 1','Layer 2','Layer 3'];
+    return labels.map((label,i)=> `${label}: ${layerFlavors[i] || '—'}`);
+  }
+
+  function renderSummary(){
+    const body = document.getElementById('summaryBody');
+    const rows = [];
+
+    const name = document.getElementById('custName').value || '—';
+    const date = document.getElementById('orderDate').value || '—';
+    const occasion = document.getElementById('occasion').value || '—';
+    rows.push(row('Customer', name));
+    rows.push(row('Date', date));
+    rows.push(row('Occasion', occasion));
+
+    if(selectedTier && tierMeta[selectedTier]){
+      const weightLabel = selectedWeight ? ` · ${selectedWeight} kg` : '';
+      rows.push(row('Cake Size', `${tierMeta[selectedTier].name} · ${tierMeta[selectedTier].serves}${weightLabel}`));
+    } else {
+      rows.push(row('Cake Size', 'Not yet selected'));
+    }
+
+    rows.push(row('Flavors', currentFlavorLines().join(' / ')));
+    rows.push(row('Frosting', document.getElementById('frosting').value || '—'));
+    const msg = document.getElementById('cakeMessage').value;
+    if(msg) rows.push(row('Cake Message', msg));
+
+    const activeAddons = addons.filter(a=>addonState[a.id].qty>0);
+    let hasQuoteItem = false;
+    if(activeAddons.length){
+      activeAddons.forEach(a=>{
+        const st = addonState[a.id];
+        const style = a.styles[st.styleIndex];
+        const priceLabel = style.price===null ? 'Quote on request' : `₹${style.price} ea`;
+        if(style.price===null) hasQuoteItem = true;
+        rows.push(row(a.name, `${st.qty} × ${style.label} (${st.flavor}) · ${priceLabel}`));
+      });
+    }
+
+    const venue = document.getElementById('venueLocation').value;
+    if(venue) rows.push(row('Venue', venue));
+
+    if(fulfillMode==='pickup'){
+      rows.push(row('Fulfillment', `Pickup · ${pickupSlot.value}`));
+    } else {
+      const addr = document.getElementById('deliveryAddress').value || 'Address pending';
+      rows.push(row('Fulfillment', `Delivery · ${addr.slice(0,40)}${addr.length>40?'…':''}`));
+    }
+
+    body.innerHTML = rows.join('');
+
+    // total
+    let total = selectedTier ? CONFIG.basePrices[selectedTier] : CONFIG.basePrices["1"];
+    activeAddons.forEach(a=>{
+      const st = addonState[a.id];
+      const style = a.styles[st.styleIndex];
+      if(style.price!==null) total += style.price * st.qty;
+    });
+    document.getElementById('summaryTotal').textContent = hasQuoteItem ? `₹${total}+` : `₹${total}`;
+  }
+  function row(label, value){
+    return `<div class="summary-row"><span class="label">${label}</span><span class="value">${value}</span></div>`;
+  }
+
+  // ---------- NAV ----------
+  document.getElementById('btnBack').addEventListener('click', ()=>{
+    if(current>1){ current--; showStep(current); }
+  });
+  document.getElementById('btnNext').addEventListener('click', ()=>{
+    if(current<totalSteps){
+      current++;
+      if(current===totalSteps) renderSummary();
+      showStep(current);
+    } else {
+      sendWhatsApp();
+    }
+  });
+
+  function sendWhatsApp(){
+    const unmet = addons.filter(a=> addonState[a.id].qty>0 && addonState[a.id].qty<a.min);
+    if(unmet.length){
+      alert('Please meet the minimum order for: ' + unmet.map(a=>`${a.name} (min ${a.min})`).join(', '));
+      return;
+    }
+    const name = document.getElementById('custName').value || 'Not provided';
+    const date = document.getElementById('orderDate').value || 'Not provided';
+    const flag = document.getElementById('waFlag').value;
+    const num = document.getElementById('waNum').value;
+    const occasion = document.getElementById('occasion').value || 'Not provided';
+    const dietary = document.getElementById('dietary').value || 'None';
+    const size = selectedTier && tierMeta[selectedTier] ? `${tierMeta[selectedTier].name}${selectedWeight ? ' · ' + selectedWeight + ' kg' : ''}` : 'Not selected';
+    const flavors = currentFlavorLines().join(', ');
+    const frosting = document.getElementById('frosting').value || 'Not provided';
+    const msg = document.getElementById('cakeMessage').value || 'None';
+    const notes = document.getElementById('designNotes').value || 'None';
+    const activeAddons = addons.filter(a=>addonState[a.id].qty>0)
+      .map(a=>{
+        const st = addonState[a.id];
+        const style = a.styles[st.styleIndex];
+        const priceLabel = style.price===null ? 'quote on request' : `₹${style.price} ea`;
+        return `${a.name} x${st.qty} — ${style.label}, ${st.flavor} (${priceLabel})`;
+      }).join('; ') || 'None';
+    const fulfillment = fulfillMode==='pickup'
+      ? `Pickup at ${pickupSlot.value}`
+      : `Delivery to: ${document.getElementById('deliveryAddress').value || 'Not provided'}`;
+    const venue = document.getElementById('venueLocation').value || 'Not provided';
+    const total = document.getElementById('summaryTotal').textContent;
+
+    const text = `Hi Zoey's Bakehouse! I'd like to place a custom cake order:
+
+*Name:* ${name}
+*Date:* ${date}
+*Contact:* ${flag} ${num}
+*Occasion:* ${occasion}
+*Dietary Notes:* ${dietary}
+
+*Cake Size:* ${size}
+*Flavors:* ${flavors}
+*Frosting:* ${frosting}
+*Cake Message:* ${msg}
+
+*Design Notes:* ${notes}
+*Add-ons:* ${activeAddons}
+
+*Venue:* ${venue}
+*Fulfillment:* ${fulfillment}
+*Estimated Total:* ${total}`;
+
+    const url = `https://wa.me/${CONFIG.businessNumber}?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+
+    // Cleanly reset the application state and inputs
+    document.querySelectorAll('input[type="text"], input[type="date"], input[type="tel"], textarea').forEach(el => el.value = '');
+    document.querySelectorAll('select').forEach(sel => {
+      if (sel.id === 'waFlag') {
+        sel.value = '+91';
+      } else {
+        sel.selectedIndex = 0;
+      }
+    });
+
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput) fileInput.value = '';
+
+    const charCount = document.getElementById('charCount');
+    if (charCount) {
+      charCount.textContent = '0/500';
+      charCount.classList.remove('warn');
+    }
+
+    current = 1;
+    selectedTier = null;
+    selectedWeight = null;
+    document.querySelectorAll('.tier-card').forEach(c => c.classList.remove('selected'));
+    const weightField = document.getElementById('weightField');
+    if (weightField) weightField.style.display = 'none';
+
+    for (const key in layerFlavors) {
+      delete layerFlavors[key];
+    }
+    
+    addons.forEach(a => addonState[a.id] = {qty: 0, styleIndex: 0, flavor: a.flavors[0]});
+    
+    uploadedFiles = [];
+    renderThumbs();
+
+    fulfillMode = 'pickup';
+    document.querySelectorAll('#fulfillToggle button').forEach(b => {
+      b.classList.toggle('active', b.dataset.mode === 'pickup');
+    });
+    document.querySelectorAll('.fulfillment-panel').forEach(p => {
+      p.classList.toggle('active', p.dataset.panel === 'pickup');
+    });
+
+    renderFlavorLayers();
+    renderAddons();
+    showStep(1);
+
+    alert("Your custom order blueprint has been successfully generated! Please review and send the text message in the WhatsApp window that just opened, and don't forget to attach your design photos there.");
+  }
+
+  showStep(1);
+})();
+</script>
+</body>
+</html>
